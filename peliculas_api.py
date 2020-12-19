@@ -2,8 +2,10 @@ from flask import Flask, request, jsonify
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 import db
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/movies/<code>", methods=['GET'])
 def get_movie(code):
@@ -11,8 +13,12 @@ def get_movie(code):
     dbmov = con.dbmovies
     try:
         movies = dbmov.movies
-        ret = dumps(movies.find_one({'_id': ObjectId(code)}))
-        return jsonify(ret)
+        response = app.response_class(
+            response=dumps(movies.find_one({'_id': ObjectId(code)})),
+            status=200,
+            mimetype='application/json'
+        )
+        return response
     finally:
         con.close()
         print("Connection closed")
@@ -23,8 +29,12 @@ def get_movies():
     dbmov = con.dbmovies
     try:
         movies = dbmov.movies
-        ret = dumps(movies.find())
-        return jsonify(ret)
+        response = app.response_class(
+            response=dumps(movies.find()),
+            status=200,
+            mimetype='application/json'
+        )
+        return response
     finally:
         con.close()
         print("Connection closed")
@@ -33,7 +43,7 @@ def get_movies():
 def create():
     data = request.get_json()
     con = db.get_connection()
-    dbmov = con.dbmovies
+    dbmov = con.dbmovies  
     try:
         movies = dbmov.movies
         movies.insert(data)
@@ -52,8 +62,8 @@ def update(code):
         movies.update(
             {'_id': ObjectId(code)},
             data
-        ) 
-        return jsonify({"mensaje":"OK"})
+        )
+        return jsonify({"message":"OK"})
     finally:
         con.close()
         print("Connection closed")
